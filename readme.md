@@ -1,3 +1,4 @@
+markdown
 # Gestão Financeira Pessoal
 
 Este projeto é um aplicativo web para gestão financeira pessoal. Ele foi desenvolvido inteiramente com HTML, CSS, JavaScript e utiliza o framework **Bootstrap 5** para um design responsivo, além de **Chart.js** para visualização de dados e **LocalStorage** para persistência dos registros.
@@ -51,5 +52,52 @@ Além disso, o uso de modais do Bootstrap para edição de transações e despes
 1. **Clone o repositório:**
 
    ```bash
-   git clone https://github.com/Murilomm8/Gest-o-pessoal.git
-   cd Gest-o-pessoal
+   git clone https://github.com/seu-usuario/gestao-financeira-pessoal.git
+   cd gestao-financeira-pessoal
+Abra o arquivo index.html no seu navegador favorito.
+
+O aplicativo é um projeto front-end integrado, não necessitando de um servidor para testes.
+
+Uso do Aplicativo
+Cadastro de Transações:
+
+Preencha o formulário informando o tipo (entrada ou saída), descrição, valor e data.
+
+As transações aparecerão na lista de "Últimas Transações" com a data formatada.
+
+Cadastro de Despesas Fixas:
+
+Utilize o formulário para adicionar as despesas fixas.
+
+Cada despesa fixa possui um botão "Pagar". Ao clicar, ela é marcada como paga e uma transação é adicionada para descontar o valor do saldo.
+
+Orçamento Mensal:
+
+Defina seu orçamento mensal no card correspondente. O sistema exibirá um alerta indicando se você está dentro ou excedeu o orçamento.
+
+Filtragem por Data:
+
+Para visualizar apenas as transações de um período específico, utilize o formulário de filtro e os resultados serão exibidos em uma lista separada.
+
+Exportação/Importação:
+
+Utilize os botões disponíveis na Navbar para exportar os dados em um arquivo JSON ou importar um arquivo previamente exportado.
+
+Análise de Dados:
+
+Confira os gráficos na seção "Relatórios Mensais" para ver a distribuição das despesas, evolução do saldo e análise das despesas fixas.
+
+Possíveis Melhorias Futuras
+Implementar notificações ou lembretes para despesas ou contas a pagar.
+
+Adicionar autenticação de usuário, possibilitando o uso para múltiplos usuários com dados armazenados na nuvem.
+
+Expandir os relatórios com análise de tendências e recomendação de economia.
+
+Transformar o aplicativo em um PWA (Progressive Web App) para oferecer uma experiência mobile nativa.
+
+Contribuições
+Contribuições são bem-vindas! Se você tem sugestões de melhorias ou encontrou algum problema, sinta-se à vontade para abrir uma issue ou enviar um pull request.
+
+Autor
+Murilo – Desenvolvedor Full Stack apaixonado por tecnologia e inovação.
