@@ -18,7 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <style>
-    /* Estilo global */
+    /* Estilo Global */
     body {
       font-family: 'Roboto', sans-serif;
       background-color: #f5f5f5;
@@ -26,24 +26,26 @@
     html {
       scroll-behavior: smooth;
     }
-    
+
     /* Navbar */
     .navbar-custom {
       background-color: #8B0000 !important;
     }
+    .navbar-custom .export-import { 
+      /* Botões escondidos na navbar para exportar/importar */
+      margin-left: auto;
+    }
     
-    /* Dashboard geral */
+    /* Dashboard Geral */
     .dashboard {
       padding: 20px 0;
     }
     
-    /* Cards */
     .card {
       border: none;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-    
     .btn-custom {
       background-color: #8B0000;
       color: #fff;
@@ -56,64 +58,98 @@
       border: 1px solid #8B0000;
     }
     
-    /* Lista de Transações e Despesas Fixas */
-    #transaction-list li,
-    #fixed-expenses-list li {
+    /* Listas */
+    .list-group-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    #transaction-list li .actions button,
-    #fixed-expenses-list li .actions button {
+    .list-group-item .actions button {
       background: none;
       border: none;
       cursor: pointer;
       margin-left: 5px;
     }
     
-    /* Estilo para a lista filtrada */
-    #filtered-transaction-list li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
     /* Espaçamentos */
     .mb-3 { margin-bottom: 1rem; }
     .mt-4 { margin-top: 1.5rem; }
+
+    /* Divisor Horizontal */
+    .section-divider {
+      border: none;
+      height: 2px;
+      background: rgba(0,0,0,0.1);
+      margin: 40px auto;
+      width: 80%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
+  <!-- Navbar com Botões de Exportar/Importar -->
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
     <div class="container">
+      <!-- Nome com fonte cursiva -->
       <a class="navbar-brand" href="#" style="font-family: 'Pacifico', cursive;">Gestão Financeira</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item"><a class="nav-link" href="#dashboard">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="#relatorios">Relatórios</a></li>
+          <li class="nav-item"><a class="nav-link" href="#filtro-transacoes">Filtro</a></li>
+          <!-- Exportar/Importar -->
+          <li class="nav-item export-import">
+            <button class="btn btn-sm btn-light me-2" id="btnExport">
+              <i class="fas fa-download"></i> Exportar
+            </button>
+            <button class="btn btn-sm btn-light" id="btnImport">
+              <i class="fas fa-upload"></i> Importar
+            </button>
+            <input type="file" id="fileInput" style="display:none;">
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
-
+  
   <!-- Dashboard Principal -->
-  <section class="container dashboard mt-4">
+  <section id="dashboard" class="container dashboard mt-4">
     <div class="row">
       <!-- Card de Saldo Atual -->
-      <div class="col-md-4">
+      <div class="col-md-4 mb-3">
         <div class="card text-center p-3">
           <h5>Saldo Atual</h5>
           <h2 id="saldo" class="text-success">R$ 0,00</h2>
         </div>
       </div>
+      <!-- Card de Orçamento Mensal -->
+      <div class="col-md-4 mb-3">
+        <div class="card text-center p-3">
+          <h5>Orçamento Mensal</h5>
+          <div class="input-group">
+            <span class="input-group-text">R$</span>
+            <input type="number" step="0.01" id="budgetInput" class="form-control" placeholder="Defina seu orçamento">
+            <button class="btn btn-custom" id="saveBudgetBtn">Salvar</button>
+          </div>
+          <div id="budgetAlert" class="mt-2"></div>
+        </div>
+      </div>
       <!-- Card de Últimas Transações -->
-      <div class="col-md-8">
+      <div class="col-md-4 mb-3">
         <div class="card p-3">
           <h5>Últimas Transações</h5>
           <ul class="list-group" id="transaction-list">
-            <!-- As transações serão renderizadas aqui -->
+            <!-- Transações serão renderizadas aqui -->
           </ul>
         </div>
       </div>
     </div>
-  
-    <!-- Formulários de Cadastro -->
+    
+    <!-- Formulários e Gráficos -->
     <div class="row mt-4">
       <!-- Formulário de Nova Transação -->
       <div class="col-md-6">
@@ -158,22 +194,35 @@
             <button type="submit" class="btn btn-custom">Adicionar Despesa Fixa</button>
           </form>
           <ul class="list-group mt-3" id="fixed-expenses-list">
-            <!-- As despesas fixas serão renderizadas aqui -->
+            <!-- Despesas fixas serão renderizadas aqui -->
           </ul>
         </div>
       </div>
-
-      <!-- Gráfico Financeiro (Despesas Fixas) -->
+      
+      <!-- Gráfico de Despesas Fixas e Relatórios -->
       <div class="col-md-6">
-        <div class="card p-3">
+        <div class="card p-3 mb-3">
           <h5>Gráfico de Despesas Fixas</h5>
           <canvas id="graficoGastos"></canvas>
+        </div>
+        <div class="card p-3" id="relatorios">
+          <h5>Relatórios Mensais</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Distribuição de Gastos</h6>
+              <canvas id="pieChart"></canvas>
+            </div>
+            <div class="col-md-6">
+              <h6>Saldo Mensal (Últimos 6 meses)</h6>
+              <canvas id="lineChart"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
   
-  <!-- Seção Filtro de Transações -->
+  <!-- Seção de Filtro de Transações -->
   <section id="filtro-transacoes" class="container mt-4">
     <div class="card p-3">
       <h5>Filtrar Transações por Data</h5>
@@ -197,76 +246,186 @@
       </ul>
     </div>
   </section>
+  
+  <!-- Modal de Edição de Transação -->
+  <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="editTransactionForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editTransactionModalLabel">Editar Transação</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editTransId">
+            <div class="mb-3">
+              <label for="editTipo" class="form-label">Tipo</label>
+              <select class="form-select" id="editTipo" required>
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editDescricao" class="form-label">Descrição</label>
+              <input type="text" class="form-control" id="editDescricao" required>
+            </div>
+            <div class="mb-3">
+              <label for="editValor" class="form-label">Valor</label>
+              <input type="number" step="0.01" class="form-control" id="editValor" required>
+            </div>
+            <div class="mb-3">
+              <label for="editData" class="form-label">Data</label>
+              <input type="date" class="form-control" id="editData" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-custom">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Edição de Despesa Fixa -->
+  <div class="modal fade" id="editExpenseModal" tabindex="-1" aria-labelledby="editExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="editExpenseForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editExpenseModalLabel">Editar Despesa Fixa</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editExpenseId">
+            <div class="mb-3">
+              <label for="editCategoria" class="form-label">Categoria</label>
+              <input type="text" class="form-control" id="editCategoria" required>
+            </div>
+            <div class="mb-3">
+              <label for="editValorFixa" class="form-label">Valor</label>
+              <input type="number" step="0.01" class="form-control" id="editValorFixa" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-custom">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Importante: Botões Exportar/Importar já estão na Navbar, com file input escondido -->
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
-    // Inicializa variáveis globais
+    // Variáveis globais
     let transactions = [];
     let fixedExpenses = [];
-    let expenseChart;
+    let expenseChart, pieChart, lineChart;
+    let monthlyBudget = localStorage.getItem('monthlyBudget') ? parseFloat(localStorage.getItem('monthlyBudget')) : 0;
 
-    // Função para salvar os dados no localStorage
+    // Salva dados no LocalStorage
     function saveData() {
       localStorage.setItem('transactions', JSON.stringify(transactions));
       localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+      localStorage.setItem('monthlyBudget', monthlyBudget);
     }
 
-    // Função para carregar os dados do localStorage
+    // Carrega dados do LocalStorage
     function loadData() {
       const trans = localStorage.getItem('transactions');
       const fixas = localStorage.getItem('fixedExpenses');
       if (trans) transactions = JSON.parse(trans);
       if (fixas) fixedExpenses = JSON.parse(fixas);
     }
-    
-    // Função para atualizar o saldo atual
+
+    // Atualiza o saldo atual
     function updateBalance() {
       const saldoElement = document.getElementById('saldo');
       const saldo = transactions.reduce((total, trans) => {
-        let valor = parseFloat(trans.valor);
-        return total + (trans.tipo === 'entrada' ? valor : -valor);
+        let val = parseFloat(trans.valor);
+        return total + (trans.tipo === 'entrada' ? val : -val);
       }, 0);
       saldoElement.textContent = 'R$ ' + saldo.toFixed(2).replace('.', ',');
+      checkBudget(saldo);
     }
-    
-    // Função para renderizar a lista de transações (incluindo a data)
+
+    // Verifica se o saldo do mês ultrapassa o orçamento
+    function checkBudget(saldo) {
+      // Consideraremos apenas as transações do mês atual para comparar com o orçamento
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyExpenses = transactions.filter(tx => {
+        const d = new Date(tx.data);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear && tx.tipo === 'saida';
+      }).reduce((total, tx) => total + parseFloat(tx.valor), 0);
+      
+      const alertDiv = document.getElementById('budgetAlert');
+      if (monthlyBudget > 0) {
+        if (monthlyExpenses > monthlyBudget) {
+          alertDiv.innerHTML = `<small class="text-danger">Você excedeu seu orçamento em R$ ${(monthlyExpenses - monthlyBudget).toFixed(2).replace('.', ',')}</small>`;
+        } else {
+          alertDiv.innerHTML = `<small class="text-success">Você está dentro do orçamento. Restam R$ ${(monthlyBudget - monthlyExpenses).toFixed(2).replace('.', ',')}</small>`;
+        }
+      } else {
+        alertDiv.innerHTML = `<small>Orçamento não definido.</small>`;
+      }
+    }
+
+    // Renderiza as transações na lista
     function renderTransactions() {
       const list = document.getElementById('transaction-list');
       list.innerHTML = '';
-      // Mostra transações mais recentes primeiro
-      transactions.slice().reverse().forEach(trans => {
+      transactions.slice().reverse().forEach(tx => {
         const li = document.createElement('li');
         li.className = 'list-group-item';
         li.innerHTML = `
-          ${trans.tipo === 'entrada' ? '<span class="text-success">+ ' : '<span class="text-danger">- '}R$ ${parseFloat(trans.valor).toFixed(2).replace('.', ',')}</span> - ${trans.descricao} 
-          <small>(${new Date(trans.data).toLocaleDateString()})</small>
+          ${tx.tipo === 'entrada' 
+            ? `<span class="text-success">+ R$ ${parseFloat(tx.valor).toFixed(2).replace('.', ',')}</span>` 
+            : `<span class="text-danger">- R$ ${parseFloat(tx.valor).toFixed(2).replace('.', ',')}</span>`
+          } - ${tx.descricao} <small>(${new Date(tx.data).toLocaleDateString()})</small>
           <div class="actions">
-            <button onclick="editTransaction('${trans.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-            <button onclick="deleteTransaction('${trans.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+            <button onclick="openEditTransactionModal('${tx.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteTransaction('${tx.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
           </div>
         `;
         list.appendChild(li);
       });
     }
-    
-    // Funções para editar e excluir transações
-    function editTransaction(id) {
-      const trans = transactions.find(t => t.id === id);
-      const novaDescricao = prompt("Editar descrição:", trans.descricao);
-      if (novaDescricao !== null) {
-        const novoValor = prompt("Editar valor:", trans.valor);
-        if (novoValor !== null && !isNaN(novoValor)) {
-          trans.descricao = novaDescricao;
-          trans.valor = parseFloat(novoValor);
-          saveData();
-          updateBalance();
-          renderTransactions();
-        }
-      }
+
+    // Modais de Edição – Transações
+    function openEditTransactionModal(id) {
+      const tx = transactions.find(t => t.id === id);
+      if (!tx) return;
+      document.getElementById('editTransId').value = tx.id;
+      document.getElementById('editTipo').value = tx.tipo;
+      document.getElementById('editDescricao').value = tx.descricao;
+      document.getElementById('editValor').value = tx.valor;
+      document.getElementById('editData').value = tx.data;
+      var editModal = new bootstrap.Modal(document.getElementById('editTransactionModal'));
+      editModal.show();
     }
     
+    document.getElementById('editTransactionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const id = document.getElementById('editTransId').value;
+      const tx = transactions.find(t => t.id === id);
+      if(tx) {
+        tx.tipo = document.getElementById('editTipo').value;
+        tx.descricao = document.getElementById('editDescricao').value;
+        tx.valor = parseFloat(document.getElementById('editValor').value);
+        tx.data = document.getElementById('editData').value;
+        saveData();
+        updateBalance();
+        renderTransactions();
+        bootstrap.Modal.getInstance(document.getElementById('editTransactionModal')).hide();
+      }
+    });
+
     function deleteTransaction(id) {
       if (confirm("Tem certeza que deseja excluir esta transação?")) {
         transactions = transactions.filter(t => t.id !== id);
@@ -275,21 +434,21 @@
         renderTransactions();
       }
     }
-    
-    // Função para renderizar a lista de despesas fixas
+
+    // Renderiza despesas fixas
     function renderFixedExpenses() {
       const list = document.getElementById('fixed-expenses-list');
       list.innerHTML = '';
-      fixedExpenses.forEach(expense => {
+      fixedExpenses.forEach(exp => {
         const li = document.createElement('li');
         li.className = 'list-group-item';
         li.innerHTML = `
-          ${expense.categoria} - R$ ${parseFloat(expense.valor).toFixed(2).replace('.', ',')}
+          ${exp.categoria} - R$ ${parseFloat(exp.valor).toFixed(2).replace('.', ',')}
           <div class="actions">
-            <button onclick="editFixedExpense('${expense.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-            <button onclick="deleteFixedExpense('${expense.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
-            <button onclick="payFixedExpense('${expense.id}')" title="Pagar" ${expense.paid ? 'disabled' : ''}>
-              ${expense.paid ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-money-bill-wave"></i>'}
+            <button onclick="openEditExpenseModal('${exp.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteFixedExpense('${exp.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+            <button onclick="payFixedExpense('${exp.id}')" title="Pagar" ${exp.paid ? 'disabled' : ''}>
+              ${exp.paid ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-money-bill-wave"></i>'}
             </button>
           </div>
         `;
@@ -297,72 +456,80 @@
       });
     }
 
-    function editFixedExpense(id) {
+    // Modais de Edição – Despesa Fixa
+    function openEditExpenseModal(id) {
       const exp = fixedExpenses.find(e => e.id === id);
-      const novaCat = prompt("Editar categoria:", exp.categoria);
-      if(novaCat !== null) {
-        const novoValor = prompt("Editar valor:", exp.valor);
-        if (novoValor !== null && !isNaN(novoValor)) {
-          exp.categoria = novaCat;
-          exp.valor = parseFloat(novoValor);
-          saveData();
-          renderFixedExpenses();
-          updateChart();
-        }
-      }
+      if(!exp) return;
+      document.getElementById('editExpenseId').value = exp.id;
+      document.getElementById('editCategoria').value = exp.categoria;
+      document.getElementById('editValorFixa').value = exp.valor;
+      var expenseModal = new bootstrap.Modal(document.getElementById('editExpenseModal'));
+      expenseModal.show();
     }
     
+    document.getElementById('editExpenseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const id = document.getElementById('editExpenseId').value;
+      const exp = fixedExpenses.find(e => e.id === id);
+      if(exp) {
+        exp.categoria = document.getElementById('editCategoria').value;
+        exp.valor = parseFloat(document.getElementById('editValorFixa').value);
+        saveData();
+        renderFixedExpenses();
+        updateChart();
+        bootstrap.Modal.getInstance(document.getElementById('editExpenseModal')).hide();
+      }
+    });
+
     function deleteFixedExpense(id) {
-      if(confirm("Tem certeza que deseja excluir esta despesa fixa?")) {
+      if (confirm("Tem certeza que deseja excluir esta despesa fixa?")) {
         fixedExpenses = fixedExpenses.filter(e => e.id !== id);
         saveData();
         renderFixedExpenses();
         updateChart();
       }
     }
-    
-    // Função para pagar uma despesa fixa e criar uma transação de saída
+
+    // Função para pagar despesa fixa
     function payFixedExpense(id) {
-      const expense = fixedExpenses.find(e => e.id === id);
-      if (!expense) return;
-      if(expense.paid) {
-        alert("Esta despesa já foi paga.");
-        return;
-      }
-      if (confirm(`Pagar ${expense.categoria} - R$ ${parseFloat(expense.valor).toFixed(2).replace('.', ',')}?`)) {
-        expense.paid = true;
-        // Cria uma transação de saída para pagar a despesa fixa
-        const paymentTransaction = {
+      const exp = fixedExpenses.find(e => e.id === id);
+      if (!exp || exp.paid) return;
+      if (confirm(`Pagar ${exp.categoria} - R$ ${parseFloat(exp.valor).toFixed(2).replace('.', ',')}?`)) {
+        exp.paid = true;
+        // Cria transação de saída
+        const paymentTx = {
           id: Date.now().toString(),
           tipo: 'saida',
-          descricao: `Pagamento Fixo: ${expense.categoria}`,
-          valor: expense.valor,
-          data: new Date().toISOString().substring(0, 10)  // usa data atual
+          descricao: `Pagamento Fixo: ${exp.categoria}`,
+          valor: exp.valor,
+          data: new Date().toISOString().split('T')[0]
         };
-        transactions.push(paymentTransaction);
+        transactions.push(paymentTx);
         saveData();
         updateBalance();
         renderTransactions();
         renderFixedExpenses();
       }
     }
-    
-    // Função para atualizar o gráfico (Chart.js) com as despesas fixas
+
+    // Atualiza o gráfico de despesas fixas (barra)
     function updateChart() {
       const labels = fixedExpenses.map(e => e.categoria);
       const data = fixedExpenses.map(e => parseFloat(e.valor));
-      expenseChart.data.labels = labels;
-      expenseChart.data.datasets[0].data = data;
-      expenseChart.update();
+      if(expenseChart) {
+        expenseChart.data.labels = labels;
+        expenseChart.data.datasets[0].data = data;
+        expenseChart.update();
+      }
     }
-    
-    // Inicialização do Chart.js
-    function initChart() {
+
+    // Configura o chart de despesas fixas (barra)
+    function initExpenseChart() {
       const ctx = document.getElementById('graficoGastos').getContext('2d');
       expenseChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: [], // serão atualizadas com as despesas fixas
+          labels: [],
           datasets: [{
             label: 'Despesas Fixas Mensais',
             data: [],
@@ -372,14 +539,85 @@
         options: {
           responsive: true,
           scales: {
-            y: {
-              beginAtZero: true
-            }
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // Gráfico de Pizza – Distribuição de Despesas (das transações de saída)
+    function initPieChart() {
+      const ctx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: [], // categorias
+          datasets: [{
+            data: [],
+            backgroundColor: ['#8B0000', '#C0392B', '#E74C3C', '#D35400', '#F39C12'],
+          }]
+        },
+        options: {
+          responsive: true
+        }
+      });
+    }
+    
+    function updatePieChart() {
+      // Agrupa as saídas (transações do tipo saída) por categoria (assumindo que na descrição podemos inserir a categoria, ou usaremos as despesas fixas)
+      let categoryTotals = {};
+      transactions.filter(tx => tx.tipo === 'saida').forEach(tx => {
+        // Para simplicidade, vamos supor que a categoria esteja presente na descrição, separada por ":"
+        let parts = tx.descricao.split(':');
+        let cat = parts.length > 1 ? parts[1].trim() : "Diversos";
+        if (!categoryTotals[cat]) categoryTotals[cat] = 0;
+        categoryTotals[cat] += parseFloat(tx.valor);
+      });
+      pieChart.data.labels = Object.keys(categoryTotals);
+      pieChart.data.datasets[0].data = Object.values(categoryTotals);
+      pieChart.update();
+    }
+
+    // Gráfico de Linha – Evolução do Saldo (últimos 6 meses)
+    function initLineChart() {
+      const ctx = document.getElementById('lineChart').getContext('2d');
+      lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [], // Meses
+          datasets: [{
+            label: 'Saldo Mensal',
+            data: [],
+            borderColor: '#8B0000',
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
           }
         }
       });
     }
     
+    function updateLineChart() {
+      // Agrupa transações por mês para calcular o saldo ao final de cada mês
+      let saldoMensal = {};
+      transactions.forEach(tx => {
+        const d = new Date(tx.data);
+        const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        if (!saldoMensal[key]) saldoMensal[key] = 0;
+        saldoMensal[key] += tx.tipo === 'entrada' ? parseFloat(tx.valor) : -parseFloat(tx.valor);
+      });
+      // Ordena os meses e pega os 6 mais recentes
+      const meses = Object.keys(saldoMensal).sort();
+      const ultimosMeses = meses.slice(-6);
+      lineChart.data.labels = ultimosMeses;
+      lineChart.data.datasets[0].data = ultimosMeses.map(m => saldoMensal[m].toFixed(2));
+      lineChart.update();
+    }
+
     // Manipulação do formulário de nova transação
     document.getElementById('transaction-form').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -387,42 +625,41 @@
       const descricao = document.getElementById('descricao').value;
       const valor = parseFloat(document.getElementById('valor').value);
       const data = document.getElementById('data').value;
-      
-      const transacao = {
+      const novaTx = {
         id: Date.now().toString(),
-        tipo: tipo,
-        descricao: descricao,
-        valor: valor,
-        data: data  // armazenando a data no formato YYYY-MM-DD
+        tipo,
+        descricao,
+        valor,
+        data
       };
-      
-      transactions.push(transacao);
+      transactions.push(novaTx);
       saveData();
       updateBalance();
       renderTransactions();
+      updatePieChart();
+      updateLineChart();
       e.target.reset();
     });
-    
+
     // Manipulação do formulário de despesas fixas
     document.getElementById('fixed-expense-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const categoria = document.getElementById('categoria').value;
       const valor = parseFloat(document.getElementById('valorFixa').value);
-      
-      const despesa = {
+      const novaDespesa = {
         id: Date.now().toString(),
-        categoria: categoria,
-        valor: valor,
+        categoria,
+        valor,
         paid: false
       };
-      
-      fixedExpenses.push(despesa);
+      fixedExpenses.push(novaDespesa);
       saveData();
       renderFixedExpenses();
       updateChart();
+      updatePieChart();
       e.target.reset();
     });
-    
+
     // Manipulação do formulário de filtragem de transações
     document.getElementById('filter-form').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -434,7 +671,7 @@
       });
       renderFilteredTransactions(filtered);
     });
-    
+
     function renderFilteredTransactions(filtered) {
       const list = document.getElementById('filtered-transaction-list');
       list.innerHTML = '';
@@ -442,21 +679,90 @@
         const li = document.createElement('li');
         li.className = 'list-group-item';
         li.innerHTML = `
-          ${tx.tipo === 'entrada' ? '<span class="text-success">+ ' : '<span class="text-danger">- '}R$ ${parseFloat(tx.valor).toFixed(2).replace('.', ',')}</span>
-          - ${tx.descricao} <small>(${new Date(tx.data).toLocaleDateString()})</small>
+          ${tx.tipo === 'entrada' 
+            ? `<span class="text-success">+ R$ ${parseFloat(tx.valor).toFixed(2).replace('.', ',')}</span>` 
+            : `<span class="text-danger">- R$ ${parseFloat(tx.valor).toFixed(2).replace('.', ',')}</span>`
+          } - ${tx.descricao} <small>(${new Date(tx.data).toLocaleDateString()})</small>
         `;
         list.appendChild(li);
       });
     }
+
+    // Orçamento Mensal
+    document.getElementById('saveBudgetBtn').addEventListener('click', function() {
+      const value = parseFloat(document.getElementById('budgetInput').value);
+      if(!isNaN(value)) {
+        monthlyBudget = value;
+        saveData();
+        updateBalance();
+        alert("Orçamento salvo!");
+      }
+    });
+
+    // Botões de Exportar e Importar
+    document.getElementById('btnExport').addEventListener('click', function() {
+      const dataToExport = {
+        transactions,
+        fixedExpenses,
+        monthlyBudget
+      };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "dados_financeiros.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    });
+
+    document.getElementById('btnImport').addEventListener('click', function() {
+      document.getElementById('fileInput').click();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          transactions = importedData.transactions || [];
+          fixedExpenses = importedData.fixedExpenses || [];
+          monthlyBudget = importedData.monthlyBudget || 0;
+          document.getElementById('budgetInput').value = monthlyBudget;
+          saveData();
+          updateBalance();
+          renderTransactions();
+          renderFixedExpenses();
+          updateChart();
+          updatePieChart();
+          updateLineChart();
+          alert("Dados importados com sucesso!");
+        } catch (err) {
+          alert("Erro ao importar dados.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Inicialização dos charts
+    function initCharts() {
+      initExpenseChart();
+      initPieChart();
+      initLineChart();
+    }
     
-    // Carrega os dados, inicializa o Chart e renderiza as listas ao carregar a página
+    // Ao carregar a página
     document.addEventListener('DOMContentLoaded', function() {
       loadData();
+      document.getElementById('budgetInput').value = monthlyBudget;
       updateBalance();
       renderTransactions();
       renderFixedExpenses();
-      initChart();
+      initCharts();
       updateChart();
+      updatePieChart();
+      updateLineChart();
     });
   </script>
 
