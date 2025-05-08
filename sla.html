@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestão Financeira Pessoal</title>
+  
+  <!-- Google Fonts para Tipografia Moderna e Fonte Cursiva -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Pacifico&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    /* Estilo global */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Navbar */
+    .navbar-custom {
+      background-color: #8B0000 !important;
+    }
+    
+    /* Dashboard geral */
+    .dashboard {
+      padding: 20px 0;
+    }
+    
+    /* Cards */
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-custom {
+      background-color: #8B0000;
+      color: #fff;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+    .btn-custom:hover {
+      background-color: #fff;
+      color: #8B0000;
+      border: 1px solid #8B0000;
+    }
+    
+    /* Lista de Transações e Despesas Fixas */
+    #transaction-list li,
+    #fixed-expenses-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #transaction-list li .actions button,
+    #fixed-expenses-list li .actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    
+    /* Estilo para a lista filtrada */
+    #filtered-transaction-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    /* Espaçamentos */
+    .mb-3 { margin-bottom: 1rem; }
+    .mt-4 { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container">
+      <a class="navbar-brand" href="#" style="font-family: 'Pacifico', cursive;">Gestão Financeira</a>
+    </div>
+  </nav>
+
+  <!-- Dashboard Principal -->
+  <section class="container dashboard mt-4">
+    <div class="row">
+      <!-- Card de Saldo Atual -->
+      <div class="col-md-4">
+        <div class="card text-center p-3">
+          <h5>Saldo Atual</h5>
+          <h2 id="saldo" class="text-success">R$ 0,00</h2>
+        </div>
+      </div>
+      <!-- Card de Últimas Transações -->
+      <div class="col-md-8">
+        <div class="card p-3">
+          <h5>Últimas Transações</h5>
+          <ul class="list-group" id="transaction-list">
+            <!-- As transações serão renderizadas aqui -->
+          </ul>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Formulários de Cadastro -->
+    <div class="row mt-4">
+      <!-- Formulário de Nova Transação -->
+      <div class="col-md-6">
+        <div class="card p-3 mb-3">
+          <h5>Nova Transação</h5>
+          <form id="transaction-form">
+            <div class="mb-3">
+              <label for="tipo" class="form-label">Tipo</label>
+              <select class="form-select" id="tipo" required>
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="descricao" class="form-label">Descrição</label>
+              <input type="text" class="form-control" id="descricao" required>
+            </div>
+            <div class="mb-3">
+              <label for="valor" class="form-label">Valor</label>
+              <input type="number" step="0.01" class="form-control" id="valor" required>
+            </div>
+            <div class="mb-3">
+              <label for="data" class="form-label">Data</label>
+              <input type="date" class="form-control" id="data" required>
+            </div>
+            <button type="submit" class="btn btn-custom">Adicionar Transação</button>
+          </form>
+        </div>
+  
+        <!-- Formulário de Despesas Fixas -->
+        <div class="card p-3">
+          <h5>Despesas Fixas</h5>
+          <form id="fixed-expense-form">
+            <div class="mb-3">
+              <label for="categoria" class="form-label">Categoria</label>
+              <input type="text" class="form-control" id="categoria" required>
+            </div>
+            <div class="mb-3">
+              <label for="valorFixa" class="form-label">Valor</label>
+              <input type="number" step="0.01" class="form-control" id="valorFixa" required>
+            </div>
+            <button type="submit" class="btn btn-custom">Adicionar Despesa Fixa</button>
+          </form>
+          <ul class="list-group mt-3" id="fixed-expenses-list">
+            <!-- As despesas fixas serão renderizadas aqui -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Gráfico Financeiro (Despesas Fixas) -->
+      <div class="col-md-6">
+        <div class="card p-3">
+          <h5>Gráfico de Despesas Fixas</h5>
+          <canvas id="graficoGastos"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Seção Filtro de Transações -->
+  <section id="filtro-transacoes" class="container mt-4">
+    <div class="card p-3">
+      <h5>Filtrar Transações por Data</h5>
+      <form id="filter-form">
+        <div class="row">
+          <div class="col-md-5">
+            <label for="startDate" class="form-label">Data Inicial</label>
+            <input type="date" class="form-control" id="startDate">
+          </div>
+          <div class="col-md-5">
+            <label for="endDate" class="form-label">Data Final</label>
+            <input type="date" class="form-control" id="endDate">
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-custom">Filtrar</button>
+          </div>
+        </div>
+      </form>
+      <ul class="list-group mt-3" id="filtered-transaction-list">
+        <!-- Transações filtradas serão exibidas aqui -->
+      </ul>
+    </div>
+  </section>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Inicializa variáveis globais
+    let transactions = [];
+    let fixedExpenses = [];
+    let expenseChart;
+
+    // Função para salvar os dados no localStorage
+    function saveData() {
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+    }
+
+    // Função para carregar os dados do localStorage
+    function loadData() {
+      const trans = localStorage.getItem('transactions');
+      const fixas = localStorage.getItem('fixedExpenses');
+      if (trans) transactions = JSON.parse(trans);
+      if (fixas) fixedExpenses = JSON.parse(fixas);
+    }
+    
+    // Função para atualizar o saldo atual
+    function updateBalance() {
+      const saldoElement = document.getElementById('saldo');
+      const saldo = transactions.reduce((total, trans) => {
+        let valor = parseFloat(trans.valor);
+        return total + (trans.tipo === 'entrada' ? valor : -valor);
+      }, 0);
+      saldoElement.textContent = 'R$ ' + saldo.toFixed(2).replace('.', ',');
+    }
+    
+    // Função para renderizar a lista de transações (incluindo a data)
+    function renderTransactions() {
+      const list = document.getElementById('transaction-list');
+      list.innerHTML = '';
+      // Mostra transações mais recentes primeiro
+      transactions.slice().reverse().forEach(trans => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+          ${trans.tipo === 'entrada' ? '<span class="text-success">+ ' : '<span class="text-danger">- '}R$ ${parseFloat(trans.valor).toFixed(2).replace('.', ',')}</span> - ${trans.descricao} 
+          <small>(${new Date(trans.data).toLocaleDateString()})</small>
+          <div class="actions">
+            <button onclick="editTransaction('${trans.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteTransaction('${trans.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+    
+    // Funções para editar e excluir transações
+    function editTransaction(id) {
+      const trans = transactions.find(t => t.id === id);
+      const novaDescricao = prompt("Editar descrição:", trans.descricao);
+      if (novaDescricao !== null) {
+        const novoValor = prompt("Editar valor:", trans.valor);
+        if (novoValor !== null && !isNaN(novoValor)) {
+          trans.descricao = novaDescricao;
+          trans.valor = parseFloat(novoValor);
+          saveData();
+          updateBalance();
+          renderTransactions();
+        }
+      }
+    }
+    
+    function deleteTransaction(id) {
+      if (confirm("Tem certeza que deseja excluir esta transação?")) {
+        transactions = transactions.filter(t => t.id !== id);
+        saveData();
+        updateBalance();
+        renderTransactions();
+      }
+    }
+    
+    // Função para renderizar a lista de despesas fixas
+    function renderFixedExpenses() {
+      const list = document.getElementById('fixed-expenses-list');
+      list.innerHTML = '';
+      fixedExpenses.forEach(expense => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+          ${expense.categoria} - R$ ${parseFloat(expense.valor).toFixed(2).replace('.', ',')}
+          <div class="actions">
+            <button onclick="editFixedExpense('${expense.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteFixedExpense('${expense.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+            <button onclick="payFixedExpense('${expense.id}')" title="Pagar" ${expense.paid ? 'disabled' : ''}>
+              ${expense.paid ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-money-bill-wave"></i>'}
+            </button>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function editFixedExpense(id) {
+      const exp = fixedExpenses.find(e => e.id === id);
+      const novaCat = prompt("Editar categoria:", exp.categoria);
+      if(novaCat !== null) {
+        const novoValor = prompt("Editar valor:", exp.valor);
+        if (novoValor !== null && !isNaN(novoValor)) {
+          exp.categoria = novaCat;
+          exp.valor = parseFloat(novoValor);
+          saveData();
+          renderFixedExpenses();
+          updateChart();
+        }
+      }
+    }
+    
+    function deleteFixedExpense(id) {
+      if(confirm("Tem certeza que deseja excluir esta despesa fixa?")) {
+        fixedExpenses = fixedExpenses.filter(e => e.id !== id);
+        saveData();
+        renderFixedExpenses();
+        updateChart();
+      }
+    }
+    
+    // Função para pagar uma despesa fixa e criar uma transação de saída
+    function payFixedExpense(id) {
+      const expense = fixedExpenses.find(e => e.id === id);
+      if (!expense) return;
+      if(expense.paid) {
+        alert("Esta despesa já foi paga.");
+        return;
+      }
+      if (confirm(`Pagar ${expense.categoria} - R$ ${parseFloat(expense.valor).toFixed(2).replace('.', ',')}?`)) {
+        expense.paid = true;
+        // Cria uma transação de saída para pagar a despesa fixa
+        const paymentTransaction = {
+          id: Date.now().toString(),
+          tipo: 'saida',
+          descricao: `Pagamento Fixo: ${expense.categoria}`,
+          valor: expense.valor,
+          data: new Date().toISOString().substring(0, 10)  // usa data atual
+        };
+        transactions.push(paymentTransaction);
+        saveData();
+        updateBalance();
+        renderTransactions();
+        renderFixedExpenses();
+      }
+    }
+    
+    // Função para atualizar o gráfico (Chart.js) com as despesas fixas
+    function updateChart() {
+      const labels = fixedExpenses.map(e => e.categoria);
+      const data = fixedExpenses.map(e => parseFloat(e.valor));
+      expenseChart.data.labels = labels;
+      expenseChart.data.datasets[0].data = data;
+      expenseChart.update();
+    }
+    
+    // Inicialização do Chart.js
+    function initChart() {
+      const ctx = document.getElementById('graficoGastos').getContext('2d');
+      expenseChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [], // serão atualizadas com as despesas fixas
+          datasets: [{
+            label: 'Despesas Fixas Mensais',
+            data: [],
+            backgroundColor: '#8B0000'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+    
+    // Manipulação do formulário de nova transação
+    document.getElementById('transaction-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const tipo = document.getElementById('tipo').value;
+      const descricao = document.getElementById('descricao').value;
+      const valor = parseFloat(document.getElementById('valor').value);
+      const data = document.getElementById('data').value;
+      
+      const transacao = {
+        id: Date.now().toString(),
+        tipo: tipo,
+        descricao: descricao,
+        valor: valor,
+        data: data  // armazenando a data no formato YYYY-MM-DD
+      };
+      
+      transactions.push(transacao);
+      saveData();
+      updateBalance();
+      renderTransactions();
+      e.target.reset();
+    });
+    
+    // Manipulação do formulário de despesas fixas
+    document.getElementById('fixed-expense-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const categoria = document.getElementById('categoria').value;
+      const valor = parseFloat(document.getElementById('valorFixa').value);
+      
+      const despesa = {
+        id: Date.now().toString(),
+        categoria: categoria,
+        valor: valor,
+        paid: false
+      };
+      
+      fixedExpenses.push(despesa);
+      saveData();
+      renderFixedExpenses();
+      updateChart();
+      e.target.reset();
+    });
+    
+    // Manipulação do formulário de filtragem de transações
+    document.getElementById('filter-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
+      const filtered = transactions.filter(tx => {
+        const txDate = new Date(tx.data);
+        return txDate >= startDate && txDate <= endDate;
+      });
+      renderFilteredTransactions(filtered);
+    });
+    
+    function renderFilteredTransactions(filtered) {
+      const list = document.getElementById('filtered-transaction-list');
+      list.innerHTML = '';
+      filtered.forEach(tx => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+          ${tx.tipo === 'entrada' ? '<span class="text-success">+ ' : '<span class="text-danger">- '}R$ ${parseFloat(tx.valor).toFixed(2).replace('.', ',')}</span>
+          - ${tx.descricao} <small>(${new Date(tx.data).toLocaleDateString()})</small>
+        `;
+        list.appendChild(li);
+      });
+    }
+    
+    // Carrega os dados, inicializa o Chart e renderiza as listas ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+      loadData();
+      updateBalance();
+      renderTransactions();
+      renderFixedExpenses();
+      initChart();
+      updateChart();
+    });
+  </script>
+
+</body>
+</html>
